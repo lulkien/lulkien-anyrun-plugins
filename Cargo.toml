@@ -1,0 +1,15 @@
+[package]
+name = "uwsm-launcher"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+anyrun-plugin = { git = "https://github.com/Kirottu/anyrun" }
+abi_stable = "0.11.3"
+sublime_fuzzy = "0.7.0"
+fuzzy-matcher = "0.3.7"
+ron = "0.8.1"
+serde = { version = "1.0.215", features = ["derive"] }
