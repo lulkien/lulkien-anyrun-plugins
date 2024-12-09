@@ -1,44 +1,41 @@
 use abi_stable::std_types::{ROption, RString, RVec};
 use anyrun_plugin::{anyrun_interface::HandleResult, *};
 use fuzzy_matcher::FuzzyMatcher;
-use scrubber::DesktopEntry;
 use serde::Deserialize;
 use std::fs;
+use types::ApplicationDesktopEntry;
 
+mod crawler;
 mod runner;
-mod scrubber;
+mod types;
 
 #[derive(Deserialize)]
 pub struct Config {
-    desktop_actions: bool,
+    show_description: bool,
     max_entries: usize,
-    terminal: Option<String>,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
-            desktop_actions: false,
-            max_entries: 5,
-            terminal: None,
+            show_description: false,
+            max_entries: 10,
         }
     }
 }
 
 pub struct State {
     config: Config,
-    entries: Vec<(DesktopEntry, u64)>,
+    entries: Vec<ApplicationDesktopEntry>,
 }
 
 #[handler]
 pub fn handler(selection: Match, state: &State) -> HandleResult {
-    if let Some(entry) = state.entries.iter().find_map(|(entry, id)| {
-        if *id == selection.id.unwrap() {
-            Some(entry)
-        } else {
-            None
-        }
-    }) {
+    if let Some(entry) = state
+        .entries
+        .iter()
+        .find(|entry| entry.title == selection.title)
+    {
         runner::run_entry(entry, &state.config);
     }
 
@@ -58,10 +55,9 @@ pub fn init(config_dir: RString) -> State {
         }
     };
 
-    let entries = scrubber::scrubber(&config).unwrap_or_else(|why| {
-        eprintln!("Failed to load desktop entries: {}", why);
-        Vec::new()
-    });
+    let entries = crawler::crawler(&config);
+
+    println!("Found: {} entries.", entries.len());
 
     State { config, entries }
 }
@@ -69,49 +65,54 @@ pub fn init(config_dir: RString) -> State {
 #[get_matches]
 pub fn get_matches(input: RString, state: &State) -> RVec<Match> {
     let matcher = fuzzy_matcher::skim::SkimMatcherV2::default().smart_case();
-    let mut entries = state
-        .entries
-        .iter()
-        .filter_map(|(entry, id)| {
-            let app_score = match &entry.desc {
-                None => matcher.fuzzy_match(&entry.name, &input).unwrap_or(0),
-                Some(val) => matcher
-                    .fuzzy_match(&format!("{} {}", &val, &entry.name).to_string(), &input)
-                    .unwrap_or(0),
-            };
+    let mut entries = if input.is_empty() {
+        state
+            .entries
+            .iter()
+            .map(|entry| (entry, 0))
+            .collect::<Vec<_>>()
+    } else {
+        state
+            .entries
+            .iter()
+            .filter_map(|entry| {
+                let desc_score = match &entry.desc {
+                    None => matcher.fuzzy_match(&entry.title, &input).unwrap_or(0),
+                    Some(val) => matcher
+                        .fuzzy_match(&format!("{} {}", &val, &entry.title).to_string(), &input)
+                        .unwrap_or(0),
+                };
 
-            let keyword_score = entry
-                .keywords
-                .iter()
-                .map(|keyword| matcher.fuzzy_match(keyword, &input).unwrap_or(0))
-                .sum::<i64>();
+                let mut score = desc_score;
 
-            let mut score = (app_score * 25 + keyword_score) - entry.offset;
+                if entry.desc.is_some() {
+                    score *= 2;
+                }
 
-            // prioritize actions
-            if entry.desc.is_some() {
-                score *= 2;
-            }
+                if score > 0 {
+                    Some((entry, score))
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>()
+    };
 
-            if score > 0 {
-                Some((entry, *id, score))
-            } else {
-                None
-            }
-        })
-        .collect::<Vec<_>>();
-
-    entries.sort_by(|a, b| b.2.cmp(&a.2));
+    entries.sort_by(|a, b| a.1.cmp(&b.1).then_with(|| a.0.title.cmp(&b.0.title)));
 
     entries.truncate(state.config.max_entries);
     entries
         .into_iter()
-        .map(|(entry, id, _)| Match {
-            title: entry.name.clone().into(),
-            description: entry.desc.clone().map(|desc| desc.into()).into(),
+        .map(|(entry, _)| Match {
+            title: entry.title.clone().into(),
+            description: if state.config.show_description {
+                entry.desc.clone().map(|desc| desc.into()).into()
+            } else {
+                ROption::RNone
+            },
             use_pango: false,
-            icon: ROption::RSome(entry.icon.clone().into()),
-            id: ROption::RSome(id),
+            icon: entry.icon.clone().map(|icon| icon.into()).into(),
+            id: ROption::RNone,
         })
         .collect()
 }
@@ -119,7 +120,7 @@ pub fn get_matches(input: RString, state: &State) -> RVec<Match> {
 #[info]
 pub fn info() -> PluginInfo {
     PluginInfo {
-        name: "Launcher(uwsm session)".into(),
+        name: "Uwsm launcher".into(),
         icon: "distributor-logo-archlinux".into(),
     }
 }
