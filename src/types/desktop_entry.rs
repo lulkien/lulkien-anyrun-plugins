@@ -4,9 +4,6 @@ use std::{
     path::Path,
 };
 
-use crate::Config;
-
-#[allow(dead_code)]
 pub struct ApplicationDesktopEntry {
     pub entry_name: String,
     pub title: String,

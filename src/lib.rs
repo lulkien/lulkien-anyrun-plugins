@@ -1,42 +1,24 @@
+use crate::types::{Config, State};
+
 use abi_stable::std_types::{ROption, RString, RVec};
 use anyrun_plugin::{anyrun_interface::HandleResult, *};
 use fuzzy_matcher::FuzzyMatcher;
-use serde::Deserialize;
 use std::fs;
-use types::ApplicationDesktopEntry;
+use types::LaunchFreq;
 
 mod crawler;
 mod runner;
 mod types;
-
-#[derive(Deserialize)]
-pub struct Config {
-    show_description: bool,
-    max_entries: usize,
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            show_description: false,
-            max_entries: 10,
-        }
-    }
-}
-
-pub struct State {
-    config: Config,
-    entries: Vec<ApplicationDesktopEntry>,
-}
+mod utils;
 
 #[handler]
-pub fn handler(selection: Match, state: &State) -> HandleResult {
+pub fn handler(selection: Match, state: &mut State) -> HandleResult {
     if let Some(entry) = state
         .entries
         .iter()
         .find(|entry| entry.title == selection.title)
     {
-        runner::run_entry(entry, &state.config);
+        runner::run_entry(entry, &mut state.cache);
     }
 
     HandleResult::Close
@@ -57,15 +39,23 @@ pub fn init(config_dir: RString) -> State {
 
     let entries = crawler::crawler(&config);
 
-    println!("Found: {} entries.", entries.len());
+    let cache = LaunchFreq::parse_cache_file();
 
-    State { config, entries }
+    println!("Found: {} entries.", entries.len());
+    println!("Cache: {:?}.", cache);
+
+    State {
+        config,
+        entries,
+        cache,
+    }
 }
 
 #[get_matches]
 pub fn get_matches(input: RString, state: &State) -> RVec<Match> {
     let matcher = fuzzy_matcher::skim::SkimMatcherV2::default().smart_case();
     let mut entries = if input.is_empty() {
+        println!("All");
         state
             .entries
             .iter()
@@ -98,9 +88,8 @@ pub fn get_matches(input: RString, state: &State) -> RVec<Match> {
             .collect::<Vec<_>>()
     };
 
-    entries.sort_by(|a, b| a.1.cmp(&b.1).then_with(|| a.0.title.cmp(&b.0.title)));
+    utils::prepare_display_entries(&mut entries, state);
 
-    entries.truncate(state.config.max_entries);
     entries
         .into_iter()
         .map(|(entry, _)| Match {
