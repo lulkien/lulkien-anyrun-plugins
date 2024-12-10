@@ -1,6 +1,9 @@
 use crate::types::{ApplicationDesktopEntry, State};
 
-pub fn prepare_display_entries(entries: &mut Vec<(&ApplicationDesktopEntry, i64)>, state: &State) {
+pub fn sort_entries_and_truncate(
+    entries: &mut Vec<(&ApplicationDesktopEntry, i64)>,
+    state: &State,
+) {
     entries.sort_by(|a, b| {
         b.1.cmp(&a.1)
             .then_with(|| {
@@ -24,4 +27,18 @@ pub fn prepare_display_entries(entries: &mut Vec<(&ApplicationDesktopEntry, i64)
     });
 
     entries.truncate(state.config.max_entries);
+}
+
+pub fn get_exec_name(input: &str) -> Option<String> {
+    if input.trim().is_empty() {
+        None
+    } else if input.contains('/') {
+        input
+            .split('/')
+            .last()
+            .and_then(|s| s.split_whitespace().next())
+            .map(|s| s.to_string())
+    } else {
+        input.split_whitespace().next().map(|s| s.to_string())
+    }
 }

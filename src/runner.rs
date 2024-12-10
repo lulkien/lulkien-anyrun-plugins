@@ -1,9 +1,7 @@
 use crate::types::{ApplicationDesktopEntry, LaunchFreq};
 
-use std::process::Command;
-
-pub fn run_entry(entry: &ApplicationDesktopEntry, state: &mut LaunchFreq) {
-    if Command::new("uwsm")
+pub fn start_entry(entry: &ApplicationDesktopEntry, state: &mut LaunchFreq) {
+    if std::process::Command::new("uwsm")
         .arg("app")
         .arg("--")
         .arg(&entry.entry_name)

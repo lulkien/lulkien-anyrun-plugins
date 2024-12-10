@@ -1,6 +1,6 @@
-use std::{collections::HashSet, env, ffi::OsStr, fs, path::Path};
-
 use crate::{types::ApplicationDesktopEntry, Config};
+
+use std::{collections::HashSet, env, ffi::OsStr, fs, path::Path};
 
 #[allow(unused)]
 pub fn crawler(config: &Config) -> Vec<ApplicationDesktopEntry> {

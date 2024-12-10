@@ -10,7 +10,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             show_description: false,
-            max_entries: 5,
+            max_entries: 7,
         }
     }
 }
