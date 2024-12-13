@@ -28,11 +28,11 @@ impl Default for State {
                     id: 1,
                 },
                 PowerEntry {
-                    name: "Restart".into(),
+                    name: "Reboot".into(),
                     command: "systemctl".into(),
-                    args: vec!["restart".into()],
+                    args: vec!["reboot".into()],
                     icon: "system-restart-symbolic".into(),
-                    keywords: "reboot reset".into(),
+                    keywords: "restart reset".into(),
                     id: 2,
                 },
                 PowerEntry {

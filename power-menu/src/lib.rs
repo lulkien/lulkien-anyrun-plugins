@@ -42,8 +42,6 @@ pub fn get_matches(input: RString, state: &State) -> RVec<Match> {
                 )
                 .unwrap_or(0);
 
-            println!("{}: {} | {}", entry.name, title_score, keywords_score);
-
             let score: i64 = title_score * 3 + keywords_score;
 
             if score > 0 {
