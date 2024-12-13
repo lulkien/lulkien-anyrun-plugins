@@ -9,22 +9,18 @@ mod runner;
 mod types;
 mod utils;
 
-#[handler]
-pub fn handler(selection: Match, state: &mut State) -> HandleResult {
-    if let Some(entry) = state
-        .entries
-        .iter()
-        .find(|entry| entry.title == selection.title)
-    {
-        runner::start_entry(entry, &mut state.cache);
+#[info]
+pub fn info() -> PluginInfo {
+    PluginInfo {
+        name: RString::from("Uwsm launcher"),
+        icon: RString::from("app-launcher"),
     }
-
-    HandleResult::Close
 }
 
 #[init]
 pub fn init(config_dir: RString) -> State {
-    let config: Config = match std::fs::read_to_string(format!("{}/applications.ron", config_dir)) {
+    let config: Config = match std::fs::read_to_string(format!("{}/uwsm-launcher.ron", config_dir))
+    {
         Ok(content) => ron::from_str(&content).unwrap_or_else(|why| {
             eprintln!("Error parsing applications plugin config: {}", why);
             Config::default()
@@ -100,10 +96,15 @@ pub fn get_matches(input: RString, state: &State) -> RVec<Match> {
         .collect()
 }
 
-#[info]
-pub fn info() -> PluginInfo {
-    PluginInfo {
-        name: "Uwsm launcher".into(),
-        icon: "app-launcher".into(),
+#[handler]
+pub fn handler(selection: Match, state: &mut State) -> HandleResult {
+    if let Some(entry) = state
+        .entries
+        .iter()
+        .find(|entry| entry.title == selection.title)
+    {
+        runner::start_entry(entry, &mut state.cache);
     }
+
+    HandleResult::Close
 }
