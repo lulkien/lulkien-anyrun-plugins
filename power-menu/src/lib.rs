@@ -1,12 +1,13 @@
-use entry::PowerEntry;
-use state::State;
+use crate::{config::Config, entry::PowerEntry, state::State};
 
 use abi_stable::std_types::{ROption, RString, RVec};
 use anyrun_plugin::{anyrun_interface::HandleResult, *};
 use fuzzy_matcher::FuzzyMatcher;
+use std::fs;
 
 mod config;
 mod entry;
+mod notify;
 mod runner;
 mod state;
 
@@ -22,8 +23,21 @@ pub fn info() -> PluginInfo {
 }
 
 #[init]
-pub fn init(_config_dir: RString) -> State {
-    State::default()
+pub fn init(config_dir: RString) -> State {
+    let config_path = format!("{}/power-menu.ron", config_dir);
+
+    let config: Config = match fs::read_to_string(&config_path) {
+        Ok(content) => ron::from_str(&content).unwrap_or_else(|why| {
+            eprintln!("Error parsing config: Path: {config_path} | Why: {why}");
+            Config::default()
+        }),
+        Err(why) => {
+            eprintln!("Error reading config: Path: {config_path} | Why: {why}");
+            Config::default()
+        }
+    };
+
+    State::new(config)
 }
 
 #[get_matches]
@@ -74,7 +88,7 @@ pub fn handler(selection: Match, state: &mut State) -> HandleResult {
         .iter()
         .find(|entry| Some(entry.id) == selection.id.into())
     {
-        runner::run(entry);
+        runner::run(entry, &state.config);
     }
     HandleResult::Close
 }

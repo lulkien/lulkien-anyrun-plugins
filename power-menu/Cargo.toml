@@ -10,5 +10,7 @@ crate-type = ["cdylib"]
 abi_stable = "0.11.3"
 anyrun-plugin = "0.1.0"
 fuzzy-matcher = "0.3.7"
+notify-rust = "4.11.3"
+ron = "0.8.1"
 serde = { version = "1.0.216", features = ["derive"] }
 whoami = "1.5.2"

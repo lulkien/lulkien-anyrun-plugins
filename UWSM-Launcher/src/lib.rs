@@ -3,6 +3,7 @@ use crate::types::{Config, LaunchFreq, State};
 use abi_stable::std_types::{ROption, RString, RVec};
 use anyrun_plugin::{anyrun_interface::HandleResult, *};
 use fuzzy_matcher::FuzzyMatcher;
+use std::fs;
 
 mod crawler;
 mod runner;
@@ -19,14 +20,15 @@ pub fn info() -> PluginInfo {
 
 #[init]
 pub fn init(config_dir: RString) -> State {
-    let config: Config = match std::fs::read_to_string(format!("{}/uwsm-launcher.ron", config_dir))
-    {
+    let config_path = format!("{}/uwsm-launcher.ron", config_dir);
+
+    let config: Config = match fs::read_to_string(&config_path) {
         Ok(content) => ron::from_str(&content).unwrap_or_else(|why| {
-            eprintln!("Error parsing applications plugin config: {}", why);
+            eprintln!("Error parsing config: Path: {config_path} | Why: {why}");
             Config::default()
         }),
         Err(why) => {
-            eprintln!("Error reading applications plugin config: {}", why);
+            eprintln!("Error reading config: Path: {config_path} | Why: {why}");
             Config::default()
         }
     };
