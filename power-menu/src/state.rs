@@ -12,7 +12,7 @@ impl State {
             config,
             entries: vec![
                 PowerEntry {
-                    name: "Stop UWSM session".into(),
+                    name: "Stop UWSM".into(),
                     command: "uwsm".into(),
                     args: vec!["stop".into()],
                     icon: "system-log-out-symbolic".into(),
