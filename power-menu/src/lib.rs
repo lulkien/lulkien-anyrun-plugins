@@ -42,17 +42,23 @@ pub fn init(config_dir: RString) -> State {
 
 #[get_matches]
 pub fn get_matches(input: RString, state: &State) -> RVec<Match> {
+    let input = input.trim();
+    if input.is_empty() {
+        return Vec::new().into();
+    }
+
     let matcher = fuzzy_matcher::skim::SkimMatcherV2::default().smart_case();
+
     let mut entries: Vec<(&PowerEntry, i64)> = state
         .entries
         .iter()
         .filter_map(|entry| {
-            let title_score: i64 = matcher.fuzzy_match(&entry.name, &input).unwrap_or(0);
+            let title_score: i64 = matcher.fuzzy_match(&entry.name, input).unwrap_or(0);
 
             let keywords_score: i64 = matcher
                 .fuzzy_match(
                     format!("{} {}", PLUGIN_NAME, &entry.keywords).as_str(),
-                    &input,
+                    input,
                 )
                 .unwrap_or(0);
 

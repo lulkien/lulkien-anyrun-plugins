@@ -44,6 +44,8 @@ pub fn init(config_dir: RString) -> State {
 
 #[get_matches]
 pub fn get_matches(input: RString, state: &State) -> RVec<Match> {
+    let input = input.trim();
+
     let matcher = fuzzy_matcher::skim::SkimMatcherV2::default().smart_case();
     let mut entries = if input.is_empty() {
         state
@@ -56,15 +58,15 @@ pub fn get_matches(input: RString, state: &State) -> RVec<Match> {
             .entries
             .iter()
             .filter_map(|entry| {
-                let title_score: i64 = matcher.fuzzy_match(&entry.title, &input).unwrap_or(0);
+                let title_score: i64 = matcher.fuzzy_match(&entry.title, input).unwrap_or(0);
 
-                let exec_score: i64 = matcher.fuzzy_match(&entry.exec, &input).unwrap_or(0);
+                let exec_score: i64 = matcher.fuzzy_match(&entry.exec, input).unwrap_or(0);
 
                 let desc_score: i64 = if state.config.show_description {
                     entry
                         .desc
                         .as_ref()
-                        .map_or(0, |desc| matcher.fuzzy_match(desc, &input).unwrap_or(0))
+                        .map_or(0, |desc| matcher.fuzzy_match(desc, input).unwrap_or(0))
                 } else {
                     0
                 };
