@@ -51,14 +51,16 @@ pub fn get_matches(input: RString, state: &State) -> RVec<Match> {
         state
             .entries
             .iter()
-            .map(|entry| (entry, 0))
+            .map(|entry| (entry, 0, vec![]))
             .collect::<Vec<_>>()
     } else {
         state
             .entries
             .iter()
             .filter_map(|entry| {
-                let title_score: i64 = matcher.fuzzy_match(&entry.title, input).unwrap_or(0);
+                let (title_score, match_indices): (i64, Vec<usize>) = matcher
+                    .fuzzy_indices(&entry.title, input)
+                    .unwrap_or((0, vec![]));
 
                 let exec_score: i64 = matcher.fuzzy_match(&entry.exec, input).unwrap_or(0);
 
@@ -74,7 +76,7 @@ pub fn get_matches(input: RString, state: &State) -> RVec<Match> {
                 let score: i64 = title_score * 3 + exec_score * 2 + desc_score;
 
                 if score > 0 {
-                    Some((entry, score))
+                    Some((entry, score, match_indices))
                 } else {
                     None
                 }
@@ -86,14 +88,16 @@ pub fn get_matches(input: RString, state: &State) -> RVec<Match> {
 
     entries
         .into_iter()
-        .map(|(entry, _)| Match {
-            title: entry.title.clone().into(),
+        .map(|(entry, _, hl_indices)| Match {
+            title: entry
+                .formatted_title(&hl_indices, &state.config.highlight_color)
+                .into(),
             description: if state.config.show_description {
                 entry.desc.clone().map(|desc| desc.into()).into()
             } else {
                 ROption::RNone
             },
-            use_pango: false,
+            use_pango: true,
             icon: entry.icon.clone().map(|icon| icon.into()).into(),
             id: ROption::RNone,
         })

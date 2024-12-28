@@ -49,11 +49,13 @@ pub fn get_matches(input: RString, state: &State) -> RVec<Match> {
 
     let matcher = fuzzy_matcher::skim::SkimMatcherV2::default().smart_case();
 
-    let mut entries: Vec<(&PowerEntry, i64)> = state
+    let mut entries: Vec<(&PowerEntry, i64, Vec<usize>)> = state
         .entries
         .iter()
         .filter_map(|entry| {
-            let title_score: i64 = matcher.fuzzy_match(&entry.name, input).unwrap_or(0);
+            let (title_score, match_indices): (i64, Vec<usize>) = matcher
+                .fuzzy_indices(&entry.name, input)
+                .unwrap_or((0, vec![]));
 
             let keywords_score: i64 = matcher
                 .fuzzy_match(
@@ -65,7 +67,7 @@ pub fn get_matches(input: RString, state: &State) -> RVec<Match> {
             let score: i64 = title_score * 3 + keywords_score;
 
             if score > 0 {
-                Some((entry, score))
+                Some((entry, score, match_indices))
             } else {
                 None
             }
@@ -76,10 +78,12 @@ pub fn get_matches(input: RString, state: &State) -> RVec<Match> {
 
     entries
         .into_iter()
-        .map(|(entry, _)| Match {
-            title: entry.name.clone().into(),
+        .map(|(entry, _, match_indices)| Match {
+            title: entry
+                .formatted_title(&match_indices, &state.config.highlight_color)
+                .into(),
             description: ROption::RNone,
-            use_pango: false,
+            use_pango: true,
             icon: ROption::RSome(entry.icon.clone().into()),
             id: ROption::RSome(entry.id),
         })

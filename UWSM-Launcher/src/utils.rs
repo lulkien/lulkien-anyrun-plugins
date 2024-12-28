@@ -1,7 +1,7 @@
 use crate::types::{ApplicationDesktopEntry, State};
 
 pub fn sort_entries_and_truncate(
-    entries: &mut Vec<(&ApplicationDesktopEntry, i64)>,
+    entries: &mut Vec<(&ApplicationDesktopEntry, i64, Vec<usize>)>,
     state: &State,
 ) {
     entries.sort_by(|a, b| {

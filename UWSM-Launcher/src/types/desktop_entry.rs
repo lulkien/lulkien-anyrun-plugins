@@ -69,4 +69,20 @@ impl ApplicationDesktopEntry {
             desc,
         })
     }
+
+    pub fn formatted_title(&self, hl_indices: &[usize], hl_color: &str) -> String {
+        let mut result = String::new();
+        for (i, c) in self.title.chars().enumerate() {
+            if hl_indices.contains(&i) {
+                result.push_str(&format!(
+                    "<span weight=\"bold\"color=\"{}\">{}</span>",
+                    hl_color, c
+                ));
+            } else {
+                result.push(c);
+            }
+        }
+
+        result
+    }
 }
