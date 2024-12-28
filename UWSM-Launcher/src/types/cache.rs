@@ -60,6 +60,17 @@ impl LaunchFreq {
         let entry = self.0.entry(key.to_string()).or_insert(0);
         *entry += 1;
 
+        if let Some(&min_value) = self.0.values().min() {
+            println!("Min: {min_value}");
+            if min_value > 1 {
+                let diff = min_value - 1;
+
+                for value in self.0.values_mut() {
+                    *value = (*value).saturating_sub(diff);
+                }
+            }
+        }
+
         let cache_path = &*CACHE_PATH;
 
         let file = match File::create(cache_path) {

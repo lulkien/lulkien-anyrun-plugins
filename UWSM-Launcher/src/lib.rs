@@ -99,7 +99,7 @@ pub fn get_matches(input: RString, state: &State) -> RVec<Match> {
             },
             use_pango: true,
             icon: entry.icon.clone().map(|icon| icon.into()).into(),
-            id: ROption::RNone,
+            id: ROption::RSome(entry.id),
         })
         .collect()
 }
@@ -109,7 +109,7 @@ pub fn handler(selection: Match, state: &mut State) -> HandleResult {
     if let Some(entry) = state
         .entries
         .iter()
-        .find(|entry| entry.title == selection.title)
+        .find(|entry| ROption::RSome(entry.id) == selection.id)
     {
         runner::start_entry(entry, &mut state.cache);
     }

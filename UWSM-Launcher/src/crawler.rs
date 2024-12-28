@@ -29,6 +29,10 @@ pub fn crawler(config: &Config) -> Vec<ApplicationDesktopEntry> {
         }
     }
 
+    for (i, entry) in application_entries.iter_mut().enumerate() {
+        entry.id = i as u64;
+    }
+
     application_entries
 }
 

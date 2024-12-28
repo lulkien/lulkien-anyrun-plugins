@@ -12,5 +12,6 @@ pub fn start_entry(entry: &ApplicationDesktopEntry, state: &mut LaunchFreq) {
         return;
     }
 
+    println!("Start: {}", &entry.entry_name);
     state.update_cache(&entry.entry_name);
 }

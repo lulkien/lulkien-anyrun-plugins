@@ -12,6 +12,7 @@ pub struct ApplicationDesktopEntry {
     pub exec: String,
     pub icon: Option<String>,
     pub desc: Option<String>,
+    pub id: u64,
 }
 
 impl ApplicationDesktopEntry {
@@ -67,6 +68,7 @@ impl ApplicationDesktopEntry {
             exec: exec.unwrap(),
             icon,
             desc,
+            id: 0,
         })
     }
 
