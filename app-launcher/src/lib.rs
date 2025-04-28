@@ -13,7 +13,7 @@ mod utils;
 #[info]
 pub fn info() -> PluginInfo {
     PluginInfo {
-        name: RString::from("Application launcher"),
+        name: RString::from("Applications"),
         icon: RString::from("app-launcher"),
     }
 }
