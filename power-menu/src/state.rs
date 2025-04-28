@@ -12,9 +12,9 @@ impl State {
             config,
             entries: vec![
                 PowerEntry {
-                    name: "Stop UWSM".into(),
-                    command: "uwsm".into(),
-                    args: vec!["stop".into()],
+                    name: "Exit Hyprland".into(),
+                    command: "hyprctl".into(),
+                    args: vec!["dispatch".into(), "exit".into()],
                     icon: "system-log-out-symbolic".into(),
                     keywords: "exit quit".into(),
                     notify: None,

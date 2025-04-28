@@ -1,3 +1,3 @@
 [workspace]
 resolver = "2"
-members = ['power-menu', 'UWSM-Launcher']
+members = ['app-launcher', 'power-menu', 'UWSM-Launcher']
